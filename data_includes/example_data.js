@@ -22,10 +22,10 @@ function Pick(set,n) {
 
 
 
-    PennController.AddHost("https://amor.cms.hu-berlin.de/~plescaan/Master/")
+    PennController.AddHost("https://amor.cms.hu-berlin.de/~plescama/pictures_WP1/")
    // PennController.AddHost("https://amor.cms.hu-berlin.de/~plescaan/Master/")  ~ OLD SERVER HOST ~
-   //PennController.DebugOff() // use for the final version
-    PennController.Sequence( "welcome",
+   PennController.DebugOff() // use for the final version
+    PennController.Sequence( "welcome","demographics",
     "instructions",
     "practice", "end_practice",
     pick(list = seq("experiment_trial"),30),
@@ -118,94 +118,138 @@ cumulative_crit = (sentence, remove) => {
     return cmds;
 };
 
-// fixation dot function
-fixation_dot1 =
-
+// create cumulative function
+cumulative_crit_practice = (sentence, remove) => {
+    let words = sentence.split('*'),  blanks = words.map(w=>w.split('').map(c=>'_').join('') ); // 'sentence.split('*')' = '*' defines the chunk boundaries (in the .csv)
+    let textName = 'cumulative'+words.join('');
+    // We'll return cmds: the first command consists in creating (and printing) a Text element with dashes. .print(50,340)
+    let cmds = [ newText(textName, blanks.join(' ')).print().settings.css("border", "solid 1px red") .settings.css("font-family","courier").settings.css("font-size", "23px").print("center at 50%", "middle at 50%")]; // COURIER as font
+    // We'll go through each word, and add two command blocks per word
+    for (let i = 0; i <= words.length; i++)
+    cmds = cmds.concat([ newKey('critical'+i+'-'+words[i], " ").log().wait() , // Wait for (and log) a press on Space
+    getText(textName).text(blanks.map((w,n)=>(n<=i?words[n]:w)).join(' ')) ]); // Show word
+    if (remove)  // Remove the text after the last key.wait() is parameter specified
+    cmds.push(getText(textName).remove());
+    return cmds;
+};
 
 
 //*********************************************************************************************************************************************************************************************
-// INTRO & DEMOGRAPHICS
-//*********************************************************************************************************************************************************************************************
+// INTRO
+//********************************************************************************************************************************************************************************************
+
 PennController("welcome",
-               fullscreen()
-               ,
-               defaultText
-               .print()
-               ,       
-               newText("text2", "<p>Humboldt-Universit&auml;t zu Berlin, Institut f&uuml;r Deutsche Sprache und Linguistik </p>")
-               .settings.center()
-               .settings.css("font-style","italic")
                
-               ,
-               newText("text1", "<h2>Willkommen und Danke, dass Du Dir die Zeit nimmst, an unserem Experiment teilzunehmen!</h2>")
-               .settings.center()
-               .settings.css("font-size", "large")
+        fullscreen()
+        ,
+        defaultText
+            .print()
+        ,       
+        newText("text2", "<p>Humboldt-Universit&auml;t zu Berlin, Institut f&uuml;r Deutsche Sprache und Linguistik </p>")
+        .settings.center()
+        .settings.css("font-style","italic")
+       
+        ,
+        newText("text1", "<h2>Willkommen und Danke, dass Du Dir die Zeit nimmst, an unserem Experiment teilzunehmen!</h2>")
+        .settings.center()
+        .settings.css("font-size", "large")
+
+        ,
+        newText("browser_info", "<br> Bitte stelle sicher, dass Du das Experiment <b>nur mit Mozilla Firefox oder Google Chrome</b> durchf&uuml;hrst.")
+        .settings.css("font-size", "large")
+       .settings.center()
+        ,
+        newText("bi", "Versuche bitte <b>nicht</b>, das Experiment auf dem Tablet oder auf dem Mobiltelefon auszuf&uuml;hren, sondern nur am Laptop oder PC.")
+        .settings.center()
+        .settings.css("font-size", "large")
+        ,
+        newText("bi2", "Stelle au&szlig;erdem sicher, dass Dein Browserfenster im Vollbildmodus ist.")
+        .settings.center()
+        .settings.css("font-size", "large")
+        ,
+        newText("bi3", "W&auml;hle einen bequemen und ruhigen Platz f&uuml;r die n&auml;chsten 15 Minuten! Vielen Dank!")
+        .settings.center()
+        .settings.css("font-size", "large")
+        ,        
+                
+        newText("br", "<br>")
+        .print()
+        ,        
+        newButton("button1", "Start").settings.css("font-size", "20px")
+            .settings.center()
+            .print()
+            .wait()
+        ,
+        getText("text1")
+            .remove()
+       
+        ,
+        getText("browser_info")
+        .remove()
+        ,
+        getText("text2")
+        .remove()
+        ,
+        getText("bi")
+        .remove()
+        ,
+         getText("bi2")
+        .remove()
+        ,
+        getText("bi3")
+        .remove()
+        ,
+        getText("br")
+        .remove()
+        ,       
+        getButton("button1")
+          .remove()
+        ,
+         newHtml("consentInfo", "consentInfo.html")
+          .settings.center()
+           .print()
+          .checkboxWarning("Bitte die Checkbox abhaken um fortzufahren!")
+        ,
+         newButton("button2", "Fortsetzen").settings.css("font-size", "20px")
+         .settings.center()
+         .print()
+          .wait(
+           getHtml("consentInfo").test.complete()
+           .failure(getHtml("consentInfo").warn())
+               )      
+        ,
+        getHtml("consentInfo")
+        .remove()
+        ,
+        getButton("button2")
+        .remove()
+        ,
+        fullscreen() 
+             
                
-               ,
-               newText("browser_info", "<br> Bitte stelle sicher, dass Du das Experiment <b>nur mit Mozilla Firefox oder Google Chrome</b> durchf&uuml;hrst.")
-               .settings.css("font-size", "large")
-               .settings.center()
-               ,
-               newText("bi", "Versuche bitte <b>nicht</b>, das Experiment auf dem Tablet oder auf dem Mobiltelefon auszuf&uuml;hren, sondern nur am Laptop oder PC.")
-               .settings.center()
-               .settings.css("font-size", "large")
-               ,
-               newText("bi2", "Stelle au&szlig;erdem sicher, dass Dein Browserfenster im Vollbildmodus ist.")
-               .settings.center()
-               .settings.css("font-size", "large")
-               ,
-               newText("bi3", "W&auml;hle einen bequemen und ruhigen Platz f&uuml;r die n&auml;chsten 40 Minuten! Vielen Dank!")
-               .settings.center()
-               .settings.css("font-size", "large")
-               ,        
+)
+
+.setOption("countsForProgressBar", false)   // no need to see the progress bar in the intro phase
+.setOption("hideProgressBar", true);
+
+
+//// DEMOGRAPHICS ==============================================================
+PennController("demographics",
+        
                
-               newText("br", "<br>")
-               .print()
-               ,        
-               newButton("button1", "Start")
-               .settings.center()
-               .print()
-               .wait()
+        newText("demo", "<b>Personenbezogene Daten</b> <p>Wir brauchen einige Angaben zu Deiner Person. Diese werden anonymisiert gespeichert und eine spätere Zuordnung zu Dir wird nicht möglich sein. Bitte nimm Dir beim Ausfüllen der Felder Zeit. Scrolle bitte nach unten um alle Fragen zu beantworten<p>")              
+        .settings.css("font-family","times new roman") .settings.css("font-size", "18px")
+        //.settings.italic()
+
                ,
-               getText("text1")
-               .remove()
-               
-               ,
-               getText("browser_info")
-               .remove()
-               ,
-               getText("text2")
-               .remove()
-               ,
-               getText("bi")
-               .remove()
-               ,
-               getText("bi2")
-               .remove()
-               ,
-               getText("bi3")
-               .remove()
-               ,
-               getText("br")
-               .remove()
-               ,       
-               getButton("button1")
-               .remove()
-               ,
-              // Demograpgics begin
-            newText("demo", "<p><small><i> Bevor wir mit dem Experiment anfangen, brauchen wir noch einige Informationen von Dir. Alle personenbezogenen Angaben werden anonymisiert gespeichert und eine sp&auml;tere Zuordnung der angegebenen Daten"
-                +"zu Versuchspersonen wird den Forschenden nicht mehr m&ouml;glich sein. Wenn Du fertig bist, klicke bitte auf 'Fortsetzen'.</i></small><p>")  
-               .settings.css("font-size", "20px")
-               .settings.center()
-               ,
-               newCanvas("democanvas", 1000,115)
-               .settings.add(0,0, getText("demo"))
-               .settings.center()
+                  
+               newCanvas("democanvas", 1000,120)
+               .settings.add(20,0, getText("demo"))
+               //.settings.center()
                .print()
                ,
                newDropDown("age", "Bitte eine Option ausw&auml;hlen")
-               .settings.size(200,20)
-               .settings.add("18" , "19" , "20", "21" , "22" , "23", "24" , "25" , "26", "27" , "28" , "29", "30" , "+31")
+               .settings.add("18" , "19" , "20", "21" , "22" , "23", "24" , "25" , "26", "27" , "28" , "29", "30" , "über 31")
                .settings.log()
                
                ,
@@ -214,9 +258,9 @@ PennController("welcome",
                .settings.bold()
                ,
                newCanvas("agecanvas", 1000, 40)
-               .settings.add(0,0,getText("agetext"))
-               .settings.add(800,2, getDropDown("age"))
-               .settings.center()
+               .settings.add(20,0,getText("agetext"))
+               .settings.add(450,2, getDropDown("age"))
+               //.settings.center()
                .print()
                ,
                newText("sex", "2. Geschlecht:")
@@ -224,67 +268,141 @@ PennController("welcome",
                .settings.bold()
                ,
                newDropDown("sex", "Bitte eine Option ausw&auml;hlen")
-               .settings.size(200,20)
-               .settings.add("weiblich", "m&auml;nnlich", "divers")
+               .settings.add("Weiblich", "M&auml;nnlich", "Divers")
                .settings.log()
                ,
                newCanvas("sexcanvas", 1000, 40)
-               .settings.add(0, 0, getText("sex"))
-               .settings.add(800,3, getDropDown("sex"))
-               .settings.center()
+               .settings.add(20, 0, getText("sex"))
+               .settings.add(450,3, getDropDown("sex"))
+               //.settings.center()
                .print()
                ,
-               newText("abschluss", "3. H&ouml;chster Bildungsabschluss:")
+               newText("german", "3. Ist Deutsch Deine Muttersprache?")
                .settings.css("font-size", "18px")
                .settings.bold()
+               ,
+               newDropDown("german", "Bitte eine Option ausw&auml;hlen")
+               .settings.add("Ja", "Nein")
+               .settings.log()
+               ,
+               newCanvas("germancanvas", 1000, 40)
+               .settings.add(20, 0, getText("german"))
+               .settings.add(450,3, getDropDown("german"))
+               //.settings.center()
+               .print()
+               ,
+               newText("bilingual", "<b>4. Bist Du bilingual aufgewachsen (hast Du vor Deinem 6. Lebensjahr eine andere Sprache als Deutsch gelernt)?</b><br><small>(Falls Du Ja ausgewählt hast, schreibe bitte auf, mit welcher (welchen) anderen Sprache(n) Du aufgewachsen bist)</small><br><br>")
+               .settings.css("font-size", "18px")
+               
+               , 
+               newTextInput("bilingualinput", "")
+               .settings.size(150,40)
+               .settings.log()
+               .settings.hidden()
+               ,
+               newText("bilingual_input", "")
+               .settings.after(getTextInput("bilingualinput"))
+               ,
+               newDropDown("bilingual",  "<br>" +"Bitte eine Option ausw&auml;hlen")
+               .settings.add("Ja", "Nein")
+               .settings.log()
+               .settings.after(getText("bilingual_input"))
+               .settings.callback(
+                   getDropDown("bilingual")
+                   .test.selected("Ja")
+                   .success(getTextInput("bilingualinput").settings.visible(
+                    
+                   )) )
+               ,
+               newCanvas("bilingual", 1000, 40)
+               .settings.add(20, 0, getText("bilingual"))
+               .settings.add(870,3, getDropDown("bilingual"))
+               //.settings.center()
+               .print()
+               ,
+               newCanvas("filler", 1, 20)
+               
+               .print()
+               ,
+               newText("abschluss", "5. <b>Was ist Dein h&ouml;chster Bildungsabschluss:</b><br><small>(Falls Du Sonstige ausgewählt hast, schreibe bitte auf, welche Dein h&ouml;chster Bildungsabschluss ist)</small><br><br>")
+               .settings.css("font-size", "18px")
+               
+               , 
+               newTextInput("abschlussinput", "")
+               .settings.size(150,40)
+               .settings.log()
+               .settings.hidden()
+               ,
+               newText("abschluss_input", "")
+               .settings.after(getTextInput("abschlussinput"))
                ,
                newDropDown("abschluss", "Bitte eine Option ausw&auml;hlen")
-               .settings.add("Ich bin von der Schule abgegangen ohne Hauptschulabschluss","Haupt-/Volksschulabschluss","Abitur oder gleichwertiger Abschluss","Realschulabschluss (Mittlere Reife) oder gleichwertiger Abschluss","Fachhochschulreife","Allgemeine oder fachgebundene Hochschulreife/Abitur", "Ausbildung", "Akademischer Abschluss (Fachhochschulabschluss, Diplomabschluss, Hochschulabschluss)")     // MAYBE ADD QUESTIONS ABOUT DIALECT AND DOMINANT HAND
-               .settings.size(200,20)
+               .settings.add("kein Abschluss","Schulabschluss","Abitur oder gleichwertiger Abschluss","Bachelor","Master", "Promotion", "Ausbildung", "Sonstige")     // MAYBE ADD QUESTIONS ABOUT DIALECT AND DOMINANT HAND
+               //.settings.size(191,20)
                .settings.log()
+               .settings.after(getTextInput("abschlussinput")) //
+               .settings.callback(
+                   getDropDown("abschluss")
+                   .test.selected("Sonstige")
+                   .success(getTextInput("abschlussinput").settings.visible(
+                   
+                   )) )
                ,
                newCanvas("abschlusscanvas", 1000, 40)
-               .settings.add(0, 0, getText("abschluss"))
-               .settings.add(800,4, getDropDown("abschluss"))
-               .settings.center()
+               .settings.add(20, 0, getText("abschluss"))
+               .settings.add(870,3, getDropDown("abschluss"))
+               //.settings.center()
                .print()
                ,
-               newText("Muttersprache","4. <b>Ist Deutsch ist Deine Muttersprache?</b>")
+               
+               newCanvas("filler", 1, 20)
+               .print()
+              //location of error ,
+              ,
+               newText("Leiter","<b>6.</b> Stell Dir vor, <b>die untenstehende Leiter</b> repr&auml;sentiert den relativen Sozialstatus der Menschen in Deutschland. "
+                       +"An der Spitze der Leiter stehen Menschen mit relativ hohem Status – diejenigen, die das meiste Geld, die beste Bildung und die angesehensten Arbeitspl&auml;tze haben. Ganz unten sind Menschen mit relativ niedrigem Status – beispielsweise als arbeitslos Gemeldete. Relativ weit unten zu verorten w&auml;ren auch diejenigen, die nur wenig Geld verdienen, einen niedrigen Bildungstand haben, und / oder Berufe aus&uuml;ben, die die Gesellschaft als eher wenig respektabel ansieht."
+                       +"<br> Wo w&uuml;rdest Du Dich auf dieser Leiter einordnen? W&auml;hle bitte die Sprosse, die Deinem empfundenen Sozialstatus am ehesten entspricht.")
                .settings.css("font-size", "18px")
                ,
-               newDropDown("muttersprache", "Bitte eine Option ausw&auml;hlen")
-               .settings.add("Ja", "Nein")
-               .settings.size(200,20)
+               newDropDown("leiter", "Bitte eine Option ausw&auml;hlen")
+               .settings.add("A", "B", "C","D", "E", "F","G", "H", "I","J")
                .settings.log()
                ,
-               newCanvas("muttersprachecanvas", 1000,20)
-               .settings.add(0, 0, getText("Muttersprache"))
-               .settings.add(800,0, getDropDown("muttersprache"))
-               .settings.center()
-               .print()
-              
+               newImage("leiter", "https://amor.cms.hu-berlin.de/~patarroa/Leiter.jpeg")
+               .settings.size(200,300)
                ,
-               newText("monolingual", "<b>5. Bist Du monolingual mit Deutsch aufgewachsen.</b><br><small>(keine weitere Sprache wurde vor dem 6. Lebensjahr erworben)</small>")
+               newCanvas("leitercanvas", 1000,20)
+               .settings.add(20, 10, getText("Leiter"))
+               //.settings.center()
+               .print()
+               ,
+               newCanvas("leitercanvas2", 1000,350)
+               .settings.add(350,150, getImage("leiter"))
+               .settings.add(650,300, getDropDown("leiter"))
+               //.settings.center()
+               .print()
+               ,
+               newText("degeboren", "7. Bist Du in Deutschland geboren?")
                .settings.css("font-size", "18px")
                .settings.bold()
                ,
-               newDropDown("monolingual", "Bitte eine Option ausw&auml;hlen")
+               newDropDown("degeboren", "Bitte eine Option ausw&auml;hlen")
                .settings.add("Ja", "Nein")
                .settings.log()
-               .settings.size(200,20)
+               //.settings.size(200,40)
                ,
-               newCanvas("monolingual", 1000,40)
-               .settings.add(0, 22, getText("monolingual"))
-               .settings.add(800,22,getDropDown("monolingual"))
-               .settings.center()
+               newCanvas("degeboren", 1000,190)
+               .settings.add(20, 170, getText("degeboren"))
+               .settings.add(400,170,getDropDown("degeboren"))
+               //.settings.center()
                .print()
                ,
-               newText("native", "<b>6. Mit welcher Sprache bist Du zuhause aufgewachsen?</b><br><small>(ggf. Falls Du A, D, F oder G ausgew&auml;hlt hast, schreibe bitte auf, mit welchen Dialekten Du aufgewachsen bist)</small>")
+               newText("native", "<b>8. Wie wurde bei Dir zuhause gesprochen?</b><br><small>(Falls Du A, D, F oder G ausgewählt hast, schreibe bitte auf, mit welchen Dialekten Du aufgewachsen bist)</small>")
                .settings.css("font-size","18px")
          
                ,
                newTextInput("native_dialekt", "")
-               .settings.size(200,40)
+               .settings.size(200,30)
                .settings.log()
                .settings.hidden()
                ,
@@ -293,7 +411,7 @@ PennController("welcome",
                ,
                newDropDown("language", "Bitte eine Option ausw&auml;hlen")
                .settings.add("A. Dialekt", "B. Umgangssprache", "C. Gepflegtes Hochdeutsch", "D. Alle", "E. B und C", "F. A und C", "G. A und B")
-               .settings.size(200,40)
+               //.settings.size(200,40)
                .settings.log()
                .settings.after(getText("native_dialekt_input"))
                .settings.callback(
@@ -325,20 +443,20 @@ PennController("welcome",
                    )
         
                ,
-               newCanvas("languagecanvas", 1000,60)
-              .settings.add(0, 40, getText("native"))
-              .settings.add(800,40, getDropDown("language"))
-              .settings.center()
+               newCanvas("languagecanvas", 1000,75)
+              .settings.add(20, 40, getText("native"))
+              .settings.add(680,40, getDropDown("language"))
+              //.settings.center()
               .print()
                
                ,
-               newText("current", "<b>7. Welche Sprache sprichst Du aktuell haupts&auml;chlich?</b><br><small>(ggf. Falls Du A, D, F oder G ausgew&auml;hlt hast, schreibe bitte auf, welche Dialekte Du verwendest)</small>")
+               newText("current", "<b>9. Wie sprichst Du aktuell haupts&auml;chlich?</b><br><small>(Falls Du A, D, F oder G ausgewählt hast, schreibe bitte auf, welche Dialekte Du verwendest)</small>")
                .settings.css("font-size", "18px")
 
                ,
                newTextInput("current_dialekt", "")
                .settings.log()
-               .settings.size(200,40)
+               .settings.size(200,30)
                .settings.hidden()
                ,
                newText("current_dialekt_input", "")
@@ -347,7 +465,7 @@ PennController("welcome",
                newDropDown("current_dial", "Bitte eine Option ausw&auml;hlen")
                .settings.add("A. Dialekt", "B. Umgangssprache", "C. Gepflegtes Hochdeutsch", "D. Alle", "E. B und C", "F. A und C", "G. A und B")
                .settings.log()
-               .settings.size(200,40)
+               //.settings.size(200,40)
                .settings.after(getText("current_dialekt_input"))
                .settings.callback(
                    
@@ -379,13 +497,13 @@ PennController("welcome",
 
                )
                ,
-               newCanvas("current_dialekt_canvas", 1000, 60)
-               .settings.add(0, 40, getText("current"))
-               .settings.add(800,40, getDropDown("current_dial"))
-               .settings.center()
+               newCanvas("current_dialekt_canvas", 1000, 75)
+               .settings.add(20, 40, getText("current"))
+               .settings.add(680,40, getDropDown("current_dial"))
+               //.settings.center()
                .print()   
                ,
-               newText("dialectcomp", "<b>8. Wenn Du einen Dialekt sprichst, wie gut kannst Du ihn sprechen/verstehen?</b><br><small>(Skala von 0 - 'gar nicht' bis 100 'ausgezeichnet')</small>")
+               newText("dialectcomp", "<b>10. Wenn Du einen Dialekt sprichst, wie gut kannst Du ihn sprechen/verstehen?</b><br><small>(Skala von 0 - 'gar nicht' bis 100 'ausgezeichnet')</small>")
                .settings.css("font-size", "18px")
                ,
                newTextInput("dial_comp", "")
@@ -393,13 +511,13 @@ PennController("welcome",
                .size(200, 40)
                .print()
                ,
-               newCanvas("dial_comp_canv", 1000, 60)
-               .settings.add(0, 40, getText("dialectcomp"))
-               .settings.add(800,30, getTextInput("dial_comp"))
-               .settings.center()
+               newCanvas("dial_comp_canv", 1000, 75)
+               .settings.add(20, 40, getText("dialectcomp"))
+               .settings.add(680,30, getTextInput("dial_comp"))
+               //.settings.center()
                .print()   
                ,
-               newText("hochsprcomp", "<b>9. Wie gut sprichst und verstehst Du Hochdeutsch?</b><br><small>(Skala von 0 - 'gar nicht' bis 100 'ausgezeichnet')</small>")
+               newText("hochsprcomp", "<b>11. Wie gut sprichst und verstehst Du Hochdeutsch?</b><br><small>(Skala von 0 - 'gar nicht' bis 100 'ausgezeichnet')</small>")
                .settings.css("font-size", "18px")
                ,
                newTextInput("hoch_comp", "")
@@ -408,119 +526,79 @@ PennController("welcome",
                .size(200, 40)
                .print()
                ,
-               newCanvas("hoch_comp_canv", 1000, 60)
-               .settings.add(0, 40, getText("hochsprcomp"))
-               .settings.add(800,30, getTextInput("hoch_comp"))
-               .settings.center()
+               newCanvas("hoch_comp_canv", 1000, 75)
+               .settings.add(20, 40, getText("hochsprcomp"))
+               .settings.add(680,30, getTextInput("hoch_comp"))
+               //.settings.center()
                .print()   
-               ,
-                newText("dominanteh", "10.Dominante Hand:")
-               .settings.css("font-size", "20px")
-               .settings.bold()
-               ,
-               newDropDown("domhand","Bitte eine Option ausw&auml;hlen")
-               .settings.add("rechte Hand", "linke Hand", "Ich bin beidh&auml;ndig")
-               .settings.log()
-               .settings.size(200,20)
-               ,
-               newCanvas("domhand", 1000, 40)
-               .settings.add(0, 40, getText("dominanteh"))
-               .settings.add(800,30, getDropDown("domhand"))
-               .settings.center()
-               .print() 
-               ,              
-               newText("<p> ,<br>")
+               ,        
+               newCanvas("filler2", 1, 40)
                .print()
                ,
-               newText("information", "<p>Bevor Du das Experiment startest, lies bitte die folgenden Dokumente"
-                       +" <a href='https://amor.cms.hu-berlin.de/~plescama/Forms/DE_probanden_info_ONLINE-2-2.pdf' target='_blank' >Probanden-Informationsblatt</a> and"
-                       +" <a href='https://amor.cms.hu-berlin.de/~plescama/Forms/DE_einverst%C3%83%C2%A4ndnis_ONLINE-2.pdf' target='_blank'>Einwilligungserkl&auml;rung</a>.<p>")    
-               .settings.css("font-size", "20px")
-               ,
-               newCanvas("infocanvastwo", 1000, 80)
-               .settings.add(0, 0, getText("information") )
-               .settings.center()
-               .print()
                
-               ,
-               newText("consent", "Indem ich auf <b>Best&auml;tigen und Fortsetzen</b> clicke, erkl&auml;re ich, dass ich das Probanden-Informationsblatt und die Einwilligungserkl&auml;rung gelesen und verstanden habe.<p>")
-               .settings.css("font-size", "15px")
-               .settings.italic()  
-               .settings.center()      
-               .print()
-
-               ,
-               newButton("continue", "Best&auml;tigen und Fortsetzen")
-               .settings.css("font-family", "times-new").settings.css("font-size", "14px")
-               .settings.center()
+    newButton("continue", "Weiter")
+               .settings.css("font-family", "calibri").settings.css("font-size", "20px")
+               //.settings.center()
                .settings.log()
                .print()
                .wait(
             newFunction('dummy', ()=>true).test.is(true)
-            // age
             .and( getDropDown("age").test.selected()
                     .failure( newText('errorage', "Bitte gib Dein Alter an.").color("red").print() )
             // sex
             ).and( getDropDown("sex").test.selected()
                     .failure( newText('errorsex', "Bitte gib Dein Geschlecht an.").color("red").print() )
+            // german
+            ).and( getDropDown("german").test.selected()
+                    .failure( newText('errorgerman', "Bitte gib Informationen &uuml;ber Deine Muttersprache an.").color("red").print() )
+            // bilingual
+            ) .and( getDropDown("bilingual").test.selected()
+                    .failure( newText('errorbilingual', "Bitte gib an, ob Du bilingual oder monolingual aufgewachsen bist.").color("red").print() )
             // language
             ).and( getDropDown("language").test.selected()
-                    .failure( newText('langerror', "Bitte antworte auf die Frage bez&uuml;glich Deines sprachlichen Hintergrunds!").color("red").print() )
+                    .failure( newText('langerror', "Bitte antworte auf die Frage bez&uuml;glich Deines sprachlichen Hintergrunds.").color("red").print() )
             // current dialect
             ).and( getDropDown("current_dial").test.selected()
-                    .failure( newText('dialecterr', "Bitte antworte auf die Frage bez&uuml;glich Deines sprachlichen Hintergrunds!").color("red").print() )
+                    .failure( newText('dialecterr', "Bitte antworte auf die Frage bez&uuml;glich der von Dir aktuell verwendeten Sprache.").color("red").print() )
             // abschluss
             ).and( getDropDown("abschluss").test.selected()
-                   .failure( newText('abschlusserr', "Bitte antworte auf die Frage bez&uuml;glich Deines Abschlusses!").color("red").print() )
-          
-            ).and(getDropDown("muttersprache").test.selected()
-                   .failure( newText('muttersprachererr', "Bitte gib eine Variante an.").color("red").print() )
-            
-            ).and(getDropDown("monolingual").test.selected()
-                    .failure( newText('monolingualerr', "Bitte gib Informationen &uuml;ber Deine Herkunft an!").color("red").print() )
-               
-            ).and(getDropDown("domhand").test.selected()
-                    .failure( newText('domhanderrerr', "Bitte gib Informationen &uuml;ber Deine dominante Hand an!").color("red").print() )
-               
+                   .failure( newText('abschlusserr', "Bitte antworte auf die Frage bez&uuml;glich Deines Abschlusses.").color("red").print() )
+            ).and(getDropDown("leiter").test.selected()
+                   .failure( newText('leitererr', "Bitte gib eine Variante auf der Leiter an.").color("red").print() )
+            ).and(getDropDown("degeboren").test.selected()
+                    .failure( newText('degeborenerr', "Bitte gib an, wo Du geboren wurdest.").color("red").print() )
             ).and(
               getTextInput("native_dialekt").test.printed()
-
                .success(getTextInput("native_dialekt")
                         .test.text(/^.*/) // testing if at 0 or more words were written in the input box
                          .failure(
-                             newText("dialekterr","Bitte gib Informationen &uuml;ber die Sprache, mit der Du aufgewachsen bist!")
+                             newText("dialekterr","Bitte gib Informationen &uuml;ber die Sprachform mit der Du aufgewachsen bist an.")
                              .settings.color("red")
                              .print() )
-           
                 ) //end success
-            
-            
             ).and(
              getTextInput("current_dialekt").test.printed()
               .success(getTextInput("current_dialekt")
               .test.text(/^.*/)  // testing if at 0 or more words were written in the input box
               .failure(
-                   newText("dialekterr1","Bitte gib Informationen &uuml;ber Deinen aktuellen Sprachverbrauch an")
+                   newText("dialekterr1","Bitte gib Informationen &uuml;ber Deinen aktuellen Sprachgebrauch an.")
                    .settings.color("red")
                    .print())
             ) //success
             ).and(
              getTextInput("hoch_comp").test.text(/^.+/) // testing if at least one digit was written in the input box
                 .failure(
-                   newText("dialekterr2","Bitte gib Informationen &uuml;ber Deine Hochsprache-Kompetenz an")
+                   newText("dialekterr2","Bitte gib Informationen &uuml;ber Deine Hochsprach-Kompetenz an.")
                    .settings.color("red")
                    .print())
             ).and(
             getTextInput("dial_comp").test.text(/^.+/) // testing if at least one digit was written in the input box
                    .failure(
-                   newText("dialekterr3","Bitte gib Informationen &uuml;ber Deine Dialekt-Kompetenz an")
+                   newText("dialekterr3","Bitte gib Informationen &uuml;ber Deine Dialekt-Kompetenz an.")
                    .settings.color("red")
                    .print())
-                   
-            )  )
-               
-             
-               ,     
+            ) )
+               ,
                getDropDown("age").wait("first")
                ,
                getDropDown("sex").wait("first")
@@ -529,32 +607,27 @@ PennController("welcome",
                ,
                getDropDown("current_dial").wait("first")
                ,
-               getDropDown("muttersprache").wait("first")
+               getDropDown("leiter").wait("first")
                ,
                getDropDown("abschluss").wait("first")
                ,
-               getDropDown("monolingual").wait("first")
+               getDropDown("degeboren").wait("first")
                ,
-               
-              
                getButton("continue")
                .remove()
-               
                ,
-               getText("consent")
-               .remove()
-               ,
-               getCanvas("infocanvastwo")
-               .remove()
-               
-               
-               
-               
-              )
-    
-    
-    .setOption("countsForProgressBar", false)   // no need to see the progress bar in the intro phase
-    .setOption("hideProgressBar", true);
+               newText("<p>")
+               .print()                               
+)
+
+.setOption("countsForProgressBar", false)   // no need to see the progress bar in the intro phase
+.setOption("hideProgressBar", true);
+
+
+
+
+PennController.ResetPrefix()
+
 
 
 
@@ -572,7 +645,7 @@ PennController("instructions",
                ,
                newCanvas("introc", 900, 450)
                .settings.add(40,0, getText("intro"))
-               .settings.add(40,120, getText("Remember"))
+               .settings.add(40,80, getText("Remember"))
                .settings.center()
                .print()
                
@@ -601,7 +674,7 @@ PennController("instructions",
                newText("instructions_a", "<b>Deine Aufgaben w&auml;hrend des Experiments:</b><p>"
                        + "In diesem Experiment wirst Du Bilder sehen, sowie S&auml;tze &uuml;ber Menschen, Handlungen und Berufe lesen. Dabei wird die Verarbeitung der Sprache im Kontext untersucht."
                        + "<p>(1) <b>Als erstes wirst du einen Kontextsatz lesen.</b> Lies ihn Satzteil f&uuml;r Satzteil, indem Du die Leertaste dr&uuml;ckst. "
-                       + "<p>Sobald Du jeden Satzteil (Wort) gelesen hast, dr&uuml;cke die <b>Leertaste</b> <b>mit dem Daumen oder Zeigefinger (aber immer mit demselben Finger)</b>, um den n&auml;chsten Satzteil zu enth&uuml;llen."
+                       + "<p>Sobald Du jeden Satzteil (Wort) gelesen hast, dr&uuml;cke die <b>Leertaste</b> <b>mit dem rechten/linken Daumen</b>, um den n&auml;chsten Satzteil zu enth&uuml;llen."
                        + "Wenn Du das Ende des Satzes erreicht hast, dr&uuml;cke erneut die Leertaste."
                        + "<p><b>Dr&uuml;cke die Leertaste erst dann, wenn Du jeden Satzteil vollst&auml;ndig gelesen hast</b>. "
                        + " Bitte vermeide es, wiederholt die Leertaste zu dr&uuml;cken, um den Satz schneller zu lesen oder mehrere W&ouml;rter auf einmal zu lesen. Das widerspricht dem ganzen Sinn des Experiments und verf&auml;lscht die Daten. Danke!"
@@ -680,7 +753,7 @@ PennController("instructions",
                .remove(getText("instructions_a"))
                ,
                newText("instructions_b", "(2) Als N&auml;chstes bekommst Du ein <b>Bild</b> zu sehen, das f&uuml;r ein paar Sekunden auf dem Bildschirm bleibt. Deine Aufgabe ist es, <b>das Bild zu betrachten und zu &uuml;berlegen, wie es in den Kontext des vorherigen und des n&auml;chsten Satzes passen k&ouml;nnte</b>."
-                       +"<p>(3)Du wirst einen <b> zweiten Satz </b> sehen, der eine Handlung beschreibt."
+                       +"<p>(3) Du wirst einen <b> zweiten Satz </b> sehen, der eine Handlung beschreibt."
                        +"<p>Lies Dir den Satz durch, indem Du die Leertaste dr&uuml;ckst, um jeden Satzteil aufzudecken. Die Vorgehensweise ist die gleiche wie zuvor. Wenn Du das Ende des Satzes erreicht hast, dr&uuml;cke erneut die Leertaste." )
                .settings.css("font-size", "20px")
                .settings.center()
@@ -764,10 +837,15 @@ PennController("instructions",
               .remove(getText("bio_example4"))
     
                ,
-               newText("last_instructions", "<p> Bitte denke daran, jeder experimentellen Aufgabe besonders viel Aufmerksamkeit zu schenken. Nach jedem experimentellen Versuch wirst du aufgefordert Ged&auml;chtnischecks durchzuf&uuml;hren."
-                        + "<br><br><x-large>Dr&uuml;cke die <b>Leertaste</b> um die <b>&Uuml;bungsrunde</b> zu starten.</x-large>")
+               newText("last_instructions", "<p> Bitte denke daran, jeder experimentellen Aufgabe besonders viel Aufmerksamkeit zu schenken. <b><u>Nach jedem experimentellen Versuch wirst du aufgefordert Ged&auml;chtnischecks durchzuf&uuml;hren.</b></u>"
+               + "<p>Die <u>Ged&auml;chtnischecks</u> bestehen darin zu <u>entscheiden, ob das angezeigte Bild dem zweiten/zuletzt gelesenen Satz inhaltlich passt (wurde das angezeigte Objekt fr&uuml;her erw&auml;hnt oder nicht</u>? Diese beiden Elemente, die f&uuml;r Ged&auml;chtnischecks relevant sind, werden in der &Uuml;bungsrunde rot hervorgehoben."
+    
+    
+               + "<p><b>WICHTIG!</b> W&auml;hrend des gesamtes Experimentes, bitten wir Dich, <b> den linken Zeigefinger auf die F - Taste</b> und <b>den rechten Zeigefinger auf die J-Taste</b> zu setzen."
+               + "W&auml;hrend Dein rechter und linker Zeigefinger auf den F- und J-Tasten liegen, <b> verwende bitte immer Deinen rechten (wenn Du rechtsh&auml;ndig bist) oder linken Daumen (wenn Du linksh&auml;ndig bist) f&uuml;r die Leseaufgabe</b>."
+               + "<br><br><x-large>Dr&uuml;cke die <b>Leertaste</b> um die <b>&Uuml;bungsrunde</b> zu starten.</x-large>")
                 .settings.css("font-size", "23px")
-                                          .settings.css("font-family","courier")
+                                          .settings.css("font-family","times")
                                           .print("center at 50%", "middle at 50%")
                ,
                getCanvas("instruccanvas")
@@ -796,42 +874,29 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                           fullscreen()
                                           
                                           ,
-
-                                           // dots 1_1
-                                           newText("start1_1", "<b>...</b>")
-                                          .settings.css("font-size", "15px")
-                                          .settings.css("font-family","courier")
-                                          .print("center at 35%", "middle at 50%")
-                                          
+                                          // dots 1_1
+                                          newText("start1_1", "...<span style='visibility: hidden;'>"+
+                                          [...new Array(variable.context.length-3)].map(v=>'_').join('')+"</span>")
+                                          .css({"font-size":"23px","font-family":"courier"})
+                                          .print("center at 50%", "middle at 50%")
                                           ,
-                                          // Keep the dots in place for about half of second 
-                                          newTimer("start1_1", 1000)
-                                          .start()
-                                          .wait()
-                                          
+                                          // Keep the dots in place for about a second 
+                                          newTimer("start1_1_timer", 600).start().wait()
                                           ,
                                           // Remove the dots
-                                          getText("start1_1")
-                                          .remove()
-                                              
-                                              
+                                          getText("start1_1").remove()
                                           ,
                                           // context sentence
-                                          newText ("read_ctxt","<i>Lies bitte den ersten Satz und dr&uuml;cke die Leertaste um fortzufahren</i>")
-                                          .settings.css("font-size", "15px")
-                                          .settings.center()
-                                          .settings.css("font-family","times new roman")
-                                          .settings.color("red")
+                                          newText ("read_ctxt","Lies bitte den ersten Satz und dr&uuml;cke die Leertaste um fortzufahren")
+                                          .css({"font-size":"15px","font-family":"times new roman"})
+                                          .center()
+                                          .color("red")
                                           .print("center at 50%", "middle at 46%")
                                           ,
-                                          
                                           // context sentence in SPR
                                           ...cumulative_ctxt(variable.context, "remove")
-                                        
                                           ,
-                                     
                                           getText("read_ctxt").remove()
-     
                                           ,
                                           // Adding the picture after the context sentence
                                           // adding dots at the beginning of the trial 
@@ -840,7 +905,7 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                           .print("center at 50%", "middle at 50%")
                                           ,
                                           // Keep the dots there for half a second
-                                          newTimer("start", 1000)
+                                          newTimer("start", 600)
                                           .start()
                                           .wait()
                                           ,
@@ -859,7 +924,7 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                           .settings.css("font-family","courier")
                                          
                                           ,
-                                          newImage("picture1", variable.picture1).css("border", "solid 1px black").print("center at 50%", "middle at 50%")
+                                          newImage("picture1", variable.picture1).css("border", "solid 3px red").print("center at 50%", "middle at 50%")
                                           ,
                                           newTimer("lookatpic_prac", 3000)
                                           .start()
@@ -867,7 +932,7 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                           ,
                                           getImage("picture1").remove()
                                           ,
-                                          newTimer("start", 500)
+                                          newTimer("start", 600)
                                           .start()
                                           .wait()
 
@@ -880,19 +945,15 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                           .settings.color("red")
                                           .print("center at 50%", "middle at 46%")
                                           ,
-                                           // dots 2
-                                           newText("start1_2", "<b>...</b>")
-                                          .settings.css("font-size", "15px")
-                                          .settings.css("font-family","courier")
-
-                                          .print("center at 35%", "middle at 50%")
-                                          
+                                           // dots 1_2
+                                          newText("start1_2", "...<span style='visibility: hidden;'>"+
+                                          [...new Array(variable.critical.length-3)].map(v=>'_').join('')+"</span>")
+                                          .css({"font-size":"23px","font-family":"courier"})
+                                          .print("center at 50%", "middle at 50%")
                                           ,
-                                          // Keep the dots in place for about half of second 
-                                          newTimer("start1_2", 1000)
-                                          .start()
-                                          .wait()
-                                          
+                                          // Keep the dots in place for about a second 
+                                          newTimer("start1_2_timer", 600).start().wait()
+            
                                           ,
                                           // Remove the dots
                                           getText("start1_2")
@@ -900,7 +961,8 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                               
                                           ,
                                           //critical sentence
-                                          ...cumulative_crit(variable.critical, "remove")    
+                                          ...cumulative_crit_practice(variable.critical, "remove")
+                                         
                                           ,
                                           getText("read_crit").remove()
                                           ,
@@ -909,34 +971,32 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                       newText ("rating_instru", variable.sentence + "<br>")
                                       .settings.css("font-size", "23px")
                                       .settings.css("font-family","courier")
-                                      .print("center at 50%", "middle at 20%")
+                                      .print("center at 50%", "middle at 50%")
                                       , 
                                       newText ("rating_instru2", "<p><p>Die <b>'F' Taste = 'Ja'</b>, die <b>'J' Taste = 'Nein'</b>")
                                       .settings.css("font-size", "23px")
                                       .settings.css("font-family","courier")
-                                      .settings.color("red")
-                                      .print("center at 50%", "middle at 24%")
+                                      .settings.color("black")
+                                      .print("center at 50%", "middle at 52%")
                                       ,
                                       newText("F_text", "F")
                                       .settings.css("font-size", "20px")
-                                      .print("center at 30%", "middle at 30%")
-                                      
+                                      .print("center at 30%", "middle at 60%")
                                       ,
                                       newText("yes_text", "<i>(Ja)</i>")
                                       .settings.css("font-size", "20px")
-                                      .print("center at 30%", "middle at 34%")
+                                      .print("center at 30%", "middle at 64%")
                                       .settings.color("green")
                                       ,
                                       newText("J_text", "J")
                                       .settings.css("font-size", "20px")
                                       .settings.center()
-                                      .print("center at 65%", "middle at 30%")
-                                
+                                      .print("center at 65%", "middle at 60%")
                                       ,
                                       newText("no_text", "<i>(Nein)")
                                       .settings.css("font-size", "20px")
                                       .settings.center()
-                                      .print("center at 65%", "middle at 34%") // J-version
+                                      .print("center at 65%", "middle at 64%") // J-version
                                       .settings.color("red")
                                       ,
                                       newKey("rating", "FJ")
@@ -948,7 +1008,6 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                       .log()
                                       .wait()
                                       ,     
-                                      // clear everything
                                       getText("rating_instru")
                                       .remove()
                                       , 
@@ -1008,7 +1067,7 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                       .log("expset", variable.expset)
                                       .log("picture1", variable.picture1)
                                       .log("correct_choice", variable.correct_answer)
-                                    //  .log("participant_choice", getKey("rating"))                                      
+                                      .log("participant_choice", getKey("rating"))                                      
                                       
                                      ]
                          
@@ -1057,26 +1116,20 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                            fullscreen()
                                          ,
 
-                                         
-                                          // dots 1
-                                          newText("start3", "<b>...</b>")
-                                          .settings.css("font-size", "15px")
-                                          .settings.css("font-family","courier")
-
-                                          .print("center at 35%", "middle at 50%")
-                                          
+                                          // dots 1 experimental
+                                          newText("start3", "...<span style='visibility: hidden;'>"+
+                                          [...new Array(variable.context.length-3)].map(v=>'_').join('')+"</span>")
+                                          .css({"font-size":"23px","font-family":"courier"})
+                                          .print("center at 50%", "middle at 50%")
                                           ,
-                                          // Keep the dots in place for about half of second 
-                                          newTimer("start3", 1000)
-                                          .start()
-                                          .wait()
+                                          // Keep the dots in place for about a second 
+                                          newTimer("start3_timer", 1000).start().wait()
                                           
                                           ,
                                           // Remove the dots
                                           getText("start3")
                                           .remove()
-                                              
-                                         
+
                                           ,
                                           
                                           // context sentence in SPR
@@ -1087,7 +1140,7 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                           // adding dots at the beginning of the trial 
                                           newText("start", "<b>+</b>")
                                           .settings.center("font-size", "55px")
-                                          .print("center at 50%", "middle at 50%")
+                                          .print("center at 50%", "middle at 50%").log()
                                           ,
                                           // Keep the dots there for half a second
                                           newTimer("start", 1000)
@@ -1109,7 +1162,7 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                           .settings.css("font-family","courier")
                                          
                                           ,
-                                          newImage("picture1", variable.picture1).css("border", "solid 1px black").print("center at 50%", "middle at 50%")
+                                          newImage("picture1", variable.picture1).css("border", "solid 1px black").print("center at 50%", "middle at 50%").log()
                                           ,
                                           newTimer("lookatpic_prac", 3000)
                                           .start()
@@ -1117,22 +1170,19 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                           ,
                                           getImage("picture1").remove()
                                           ,
-                                          newTimer("start", 500)
+                                          newTimer("start", 1000)
                                           .start()
                                           .wait()
                                           ,
-                                           // dots 2
-                                           newText("start4", "<b>...</b>")
-                                          .settings.css("font-family","courier")
-
-                                          .settings.css("font-size", "15px")
-                                          .print("center at 35%", "middle at 50%")
-                                          
+                                           // dots 2 experimental
+                                  
+                                          newText("start4", "...<span style='visibility: hidden;'>"+
+                                          [...new Array(variable.critical.length-3)].map(v=>'_').join('')+"</span>")
+                                          .css({"font-size":"23px","font-family":"courier"})
+                                          .print("center at 50%", "middle at 50%")
                                           ,
-                                          // Keep the dots in place for about half of second 
-                                          newTimer("start4", 1000)
-                                          .start()
-                                          .wait()
+                                          // Keep the dots in place for about a second 
+                                          newTimer("start4_timer", 500).start().wait()
                                           
                                           ,
                                           // Remove the dots
@@ -1148,33 +1198,33 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                       newText ("rating_instru", variable.sentence)
                                       .settings.css("font-size", "23px")
                                       .settings.css("font-family","courier")
-                                      .print("center at 50%", "middle at 20%")
-                                      , 
-                                      newText ("rating_instru2", "<p>Die 'F' Taste = 'Ja', die 'J' Taste = 'Nein'.")
-                                      .settings.css("font-size", "23px")
-                                      .settings.css("font-family","courier")
-                                      .print("center at 50%", "middle at 22%")
+                                      .print("center at 50%", "middle at 50%")
+                                      //, 
+                                      //newText ("rating_instru2", "<p>Die 'F' Taste = 'Ja', die 'J' Taste = 'Nein'.")
+                                      //.settings.css("font-size", "23px")
+                                      //.settings.css("font-family","courier")
+                                      //.print("center at 50%", "middle at 22%")
                                       ,
                                       newText("F_text", "F")
                                       .settings.css("font-size", "20px")
-                                      .print("center at 30%", "middle at 30%")
+                                      .print("center at 30%", "middle at 60%")
                                       
                                       ,
                                       newText("yes_text", "<i>(Ja)</i>")
                                       .settings.css("font-size", "20px")
-                                      .print("center at 30%", "middle at 34%")
+                                      .print("center at 30%", "middle at 64%")
                                       .settings.color("green")
                                       ,
                                       newText("J_text", "J")
                                       .settings.css("font-size", "20px")
                                       .settings.center()
-                                      .print("center at 65%", "middle at 30%")
+                                      .print("center at 65%", "middle at 60%")
                                 
                                       ,
                                       newText("no_text", "<i>(Nein)")
                                       .settings.css("font-size", "20px")
                                       .settings.center()
-                                      .print("center at 65%", "middle at 34%") // J-version
+                                      .print("center at 65%", "middle at 64%") // J-version
                                       .settings.color("red")
                                       ,
                                       newKey("rating", "FJ")
@@ -1190,9 +1240,9 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                       getText("rating_instru")
                                       .remove()
                                       , 
-                                      getText("rating_instru2")
-                                      .remove()
-                                      ,
+                                      //getText("rating_instru2")
+                                     // .remove()
+                                     // ,
                                       getText("F_text")
                                       .remove()
                                       ,   
@@ -1245,7 +1295,8 @@ PennController.Template( PennController.GetTable("master_spr1_long1.csv")
                                       .log("expset", variable.expset)
                                       .log("picture1", variable.picture1)
                                       .log("correct_choice", variable.correct_answer)
-                                    //  .log("participant_choice", getKey("rating"))                                      
+                                      .log("participant_choice", getKey("rating"))
+                                      .log("choice", getKey("rating"))
                                       
                                       
                                       
@@ -1554,7 +1605,7 @@ PennController.Template(PennController.GetTable("validation.csv")// change this 
                                                     .settings.center()
                                                     .print()
                                                     ,
-                                                    newText ("<p><b>"+"FRL1MAIBX"+".</b></p>")
+                                                    newText ("<p><b>"+"MGK1BL1"+"</b></p>")
                                                     .settings.css("font-family","times new roman") .settings.css("font-size", "30px")
                                                     .settings.center()
                                                     .settings.log("all")
